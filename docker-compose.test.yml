@@ -1,0 +1,44 @@
+version: '2'
+
+services:
+
+  db:
+    image: postgres
+    env_file: my_service.env
+
+  web:
+    build: .
+    depends_on:
+      - db
+    env_file: my_service.env
+    environment:
+    - DJANGO_USERNAME=admin
+    - DJANGO_PASSWORD=admin
+    volumes:
+      - static-content:/usr/share/static-content
+      - ./init_test.sh:/opt/init_test.sh
+    command:
+        bash /opt/init_test.sh
+
+  frontend:
+    image: nginx
+    depends_on:
+      - web
+    volumes:
+      - static-content:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  test:
+    build:
+      dockerfile: Dockerfile.test
+      context: .
+    environment:
+      - HOST_URL=http://frontend:8080
+      - DJANGO_USERNAME=admin
+      - DJANGO_PASSWORD=admin
+    depends_on:
+      - frontend
+
+volumes:
+  static-content:
+

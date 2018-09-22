@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+
+  db:
+    image: postgres
+    env_file: my_service.env
+
+  web:
+    build: .
+    depends_on:
+      - db
+    env_file: my_service.env
+    volumes:
+      - static-content:/usr/share/static-content
+
+  frontend:
+    image: nginx
+    ports:
+      - "80:8080"
+    depends_on:
+      - web
+    volumes:
+      - static-content:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+volumes:
+  static-content:
